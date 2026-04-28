@@ -5,7 +5,7 @@
 // ──────────────────────────────────────────────────────────
 import { useState, useEffect } from 'react';
 import { logout, getAllUsers } from '../auth.js';
-import { incidentStore, volunteerStore, chatStore, adminRequestStore } from '../store.js';
+import { incidentStore, volunteerStore, chatStore } from '../store.js';
 import IncidentMap from '../components/IncidentMap.jsx';
 import {
   Avatar, PriorityBadge, StatusBadge, CategoryIcon,
@@ -13,17 +13,15 @@ import {
 } from '../components/ui.jsx';
 
 const NAV = [
-  { key: 'management', label: 'Management',      icon: '⚙️' },
-  { key: 'access',     label: 'Access Requests', icon: '🔐' },
-  { key: 'incidents',  label: 'Incident Feed',  icon: '📍' },
-  { key: 'messages',   label: 'Messages',       icon: '💬' },
+  { key: 'management', label: 'Management',    icon: '⚙️' },
+  { key: 'incidents',  label: 'Incident Feed', icon: '📍' },
+  { key: 'messages',   label: 'Messages',      icon: '💬' },
 ];
 
 export default function Admin({ user, onLogout }) {
   const [tab, setTab]             = useState('management');
   const [volunteers, setVols]     = useState([]);
   const [incidents, setIncidents] = useState([]);
-  const [adminRequests, setAdminRequests] = useState([]);
   const [chatPartner, setCP]      = useState(null);
   const [confirm, setConfirm]     = useState(null); // { message, onConfirm }
   const [showAddVol, setShowAddVol] = useState(false);
@@ -33,8 +31,7 @@ export default function Admin({ user, onLogout }) {
   useEffect(() => {
     const u1 = volunteerStore.subscribe(setVols);
     const u2 = incidentStore.subscribe(setIncidents);
-    const u3 = adminRequestStore.subscribe(setAdminRequests);
-    return () => { u1(); u2(); u3(); };
+    return () => { u1(); u2(); };
   }, []);
 
   function handleDelete(v) {
@@ -65,16 +62,6 @@ export default function Admin({ user, onLogout }) {
     setNewVolName('');
     setNewVolSkill('');
     setShowAddVol(false);
-  }
-
-  function handleApproveAdminRequest(request) {
-    adminRequestStore.approve(request.id, user.id, user.name);
-    toast(`Admin access approved for ${request.userName}`, 'success');
-  }
-
-  function handleDenyAdminRequest(request) {
-    adminRequestStore.deny(request.id, user.id, user.name);
-    toast(`Admin access request from ${request.userName} denied`, 'info');
   }
 
   const allNonAdmins = getAllUsers().filter(u => u.id !== user.id);
@@ -294,107 +281,6 @@ export default function Admin({ user, onLogout }) {
                 </table>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* ── ACCESS REQUESTS TAB ─────────────────────────── */}
-        {tab === 'access' && (
-          <div className="animate-fade-up">
-            <div>
-              <h1 className="text-2xl font-display font-extrabold mb-2">Admin Access Requests</h1>
-              <p className="text-sm font-body mb-6" style={{ color: 'var(--text-muted)' }}>
-                Review and approve requests for admin platform access
-              </p>
-            </div>
-
-            {/* Pending requests */}
-            <div className="mb-8">
-              <h2 className="font-display font-bold mb-4 flex items-center gap-2">
-                <span>🔄 Pending Requests</span>
-                {adminRequests.filter(r => r.status === 'pending').length > 0 && (
-                  <span className="text-xs px-2.5 py-1 rounded-full glass" style={{ background: '#fb923c22', color: '#fb923c' }}>
-                    {adminRequests.filter(r => r.status === 'pending').length}
-                  </span>
-                )}
-              </h2>
-              {adminRequests.filter(r => r.status === 'pending').length === 0 ? (
-                <div className="glass rounded-2xl p-8 text-center">
-                  <p className="text-sm font-body" style={{ color: 'var(--text-muted)' }}>
-                    No pending admin access requests
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {adminRequests.filter(r => r.status === 'pending').map(req => (
-                    <div key={req.id} className="glass rounded-2xl p-5 flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <p className="font-display font-semibold text-base">{req.userName}</p>
-                          <code className="text-xs px-2.5 py-1 rounded-lg glass" style={{ color: 'var(--text-muted)' }}>
-                            {req.userEmail}
-                          </code>
-                        </div>
-                        {req.reason && (
-                          <p className="text-sm font-body mb-3" style={{ color: 'var(--text-muted)' }}>
-                            {req.reason}
-                          </p>
-                        )}
-                        <p className="text-xs font-body" style={{ color: 'var(--text-muted)' }}>
-                          Requested {new Date(req.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        <button
-                          onClick={() => handleApproveAdminRequest(req)}
-                          className="px-4 py-2 rounded-xl text-sm font-body font-semibold transition-all hover:scale-105"
-                          style={{ background: 'linear-gradient(135deg,#4ade80,#22c55e)', color: '#fff' }}
-                        >
-                          ✓ Approve
-                        </button>
-                        <button
-                          onClick={() => handleDenyAdminRequest(req)}
-                          className="px-4 py-2 rounded-xl text-sm font-body font-semibold transition-all hover:scale-105 bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                        >
-                          ✕ Deny
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Approval history */}
-            {adminRequests.filter(r => r.status !== 'pending').length > 0 && (
-              <div>
-                <h2 className="font-display font-bold mb-4">📋 History</h2>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {adminRequests.filter(r => r.status !== 'pending').map(req => (
-                    <div key={req.id} className="glass rounded-xl p-3 flex items-center justify-between text-sm font-body">
-                      <div className="flex-1">
-                        <span className="font-semibold">{req.userName}</span>
-                        <span style={{ color: 'var(--text-muted)' }}> · {req.userEmail}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span style={{ color: 'var(--text-muted)' }}>
-                          {new Date(req.decidedAt).toLocaleDateString()}
-                        </span>
-                        {req.status === 'approved' ? (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(74,222,128,0.15)', color: '#4ade80' }}>
-                            ✓ Approved
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: 'rgba(248,113,113,0.15)', color: '#f87171' }}>
-                            ✕ Denied
-                          </span>
-                        )}
-                        <span style={{ color: 'var(--text-muted)' }}>by {req.decidedByName}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
 

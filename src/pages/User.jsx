@@ -5,7 +5,7 @@
 // ──────────────────────────────────────────────────────────
 import { useState, useEffect, useRef } from 'react';
 import { logout } from '../auth.js';
-import { incidentStore, adminRequestStore } from '../store.js';
+import { incidentStore } from '../store.js';
 import { analyzeIncident } from '../gemini.js';
 import {
   Avatar, PriorityBadge, StatusBadge, CategoryIcon,
@@ -26,7 +26,6 @@ const STEP_DESC  = {
 export default function User({ user, onLogout }) {
   const [tab, setTab]               = useState('report');
   const [myIncidents, setMyInc]     = useState([]);
-  const [adminRequests, setAdminRequests] = useState([]);
 
   // Form state
   const [description, setDesc]      = useState('');
@@ -39,7 +38,6 @@ export default function User({ user, onLogout }) {
   const [dragOver, setDragOver]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [aiResult, setAiResult]     = useState(null);
-  const [requestReason, setRequestReason] = useState('');
   const fileInputRef                = useRef(null);
 
   useEffect(() => {
@@ -56,32 +54,12 @@ export default function User({ user, onLogout }) {
       }
     );
     // Subscribe to own incidents
-    const unsub1 = incidentStore.subscribe(all => {
+    const unsub = incidentStore.subscribe(all => {
       setMyInc(all.filter(i => i.reportedBy === user.id)
                    .sort((a,b) => b.createdAt - a.createdAt));
     });
-    // Subscribe to admin requests
-    const unsub2 = adminRequestStore.subscribe(all => {
-      setAdminRequests(all);
-    });
-    return () => { unsub1(); unsub2(); };
+    return unsub;
   }, [user.id]);
-
-  // ── Admin request ─────────────────────────────────────
-  function handleAdminRequest() {
-    if (!requestReason.trim()) {
-      toast('Please provide a reason for requesting admin access', 'error');
-      return;
-    }
-    const existing = adminRequests.find(r => r.userId === user.id && r.status === 'pending');
-    if (existing) {
-      toast('You already have a pending admin access request', 'info');
-      return;
-    }
-    adminRequestStore.request(user.id, user.name, user.email, requestReason);
-    toast('Admin access request submitted! Admins will review shortly.', 'success');
-    setRequestReason('');
-  }
 
   // ── Image handling ─────────────────────────────────────
   function processImageFile(file) {
@@ -188,7 +166,6 @@ export default function User({ user, onLogout }) {
             {[
               { key: 'report', label: '+ Report' },
               { key: 'track',  label: '📍 Track' },
-              { key: 'admin',  label: '🔐 Admin' },
             ].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-body font-medium transition-all ${
@@ -453,100 +430,6 @@ export default function User({ user, onLogout }) {
                 {myIncidents.map((inc, idx) => (
                   <IncidentCard key={inc.id} inc={inc} idx={idx} />
                 ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── ADMIN TAB ────────────────────────────────────── */}
-        {tab === 'admin' && (
-          <div className="animate-fade-up">
-            <div className="mb-7">
-              <h1 className="text-2xl font-display font-extrabold">Request Admin Access</h1>
-              <p className="text-sm font-body mt-1" style={{ color: 'var(--text-muted)' }}>
-                Request elevated privileges to manage the platform
-              </p>
-            </div>
-
-            {/* Current request status */}
-            {adminRequests.length > 0 && adminRequests.find(r => r.userId === user.id) && (
-              <div className="mb-7 glass-lit rounded-2xl p-5">
-                {(() => {
-                  const userRequest = adminRequests.find(r => r.userId === user.id);
-                  return (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        {userRequest.status === 'pending' && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold animate-pulse"
-                            style={{ background: '#fb923c22', color: '#fb923c' }}>
-                            ⏱️ Pending Review
-                          </span>
-                        )}
-                        {userRequest.status === 'approved' && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                            style={{ background: '#4ade8044', color: '#4ade80' }}>
-                            ✓ Approved
-                          </span>
-                        )}
-                        {userRequest.status === 'denied' && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                            style={{ background: '#f8717144', color: '#f87171' }}>
-                            ✕ Denied
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-body mb-2">
-                        {userRequest.status === 'pending' && 'Your request is being reviewed by our admin team.'}
-                        {userRequest.status === 'approved' && 'Congratulations! Your admin access has been approved. Please log out and log back in to access admin features.'}
-                        {userRequest.status === 'denied' && 'Your request has been declined. You can submit a new request with more details.'}
-                      </p>
-                      {userRequest.decidedAt && (
-                        <p className="text-xs font-body" style={{ color: 'var(--text-muted)' }}>
-                          Decided {new Date(userRequest.decidedAt).toLocaleDateString()} by {userRequest.decidedByName}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Request form */}
-            {!adminRequests.find(r => r.userId === user.id && r.status === 'pending') && (
-              <div className="glass rounded-2xl p-6">
-                <h2 className="font-display font-bold mb-4">Submit Request</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-body mb-2 uppercase tracking-widest"
-                      style={{ color: 'var(--text-muted)' }}>
-                      Reason for Admin Access *
-                    </label>
-                    <textarea
-                      value={requestReason}
-                      onChange={e => setRequestReason(e.target.value)}
-                      rows={4}
-                      placeholder="Explain why you need admin access and what you plan to do with it..."
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-body text-white placeholder-white/20 resize-none
-                        focus:outline-none focus:border-[#fb923c66] focus:ring-1 focus:ring-[#fb923c22] transition-all leading-relaxed"
-                    />
-                  </div>
-                  <p className="text-xs font-body" style={{ color: 'var(--text-muted)' }}>
-                    Only existing admins can approve new admin access. Provide a clear reason for your request.
-                  </p>
-                  <button
-                    onClick={handleAdminRequest}
-                    disabled={!requestReason.trim()}
-                    className="w-full rounded-xl py-3 font-display font-bold text-sm transition-all duration-200 active:scale-95 disabled:opacity-40"
-                    style={{
-                      background: requestReason.trim()
-                        ? 'linear-gradient(135deg, #fb923c, #ea580c)'
-                        : 'rgba(251,146,60,0.15)',
-                      boxShadow: requestReason.trim() ? '0 4px 20px rgba(251,146,60,0.35)' : 'none',
-                      color: requestReason.trim() ? '#7c2d12' : 'var(--text-muted)',
-                    }}>
-                    🔐 Request Admin Access
-                  </button>
-                </div>
               </div>
             )}
           </div>

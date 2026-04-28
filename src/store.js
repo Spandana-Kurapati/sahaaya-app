@@ -117,9 +117,8 @@ let _volunteers = loadOrSeed('sahaya_volunteers', [
   { id: 'vol-002', name: 'Kavya Reddy',   skill: 'Logistics', tasksCompleted: 8,  helpHours: 22, reported: false, color: '#4ade80', avatar: 'KR' },
   { id: 'vol-003', name: 'Rishi Nair',    skill: 'Rescue',    tasksCompleted: 5,  helpHours: 15, reported: false, color: '#c084fc', avatar: 'RN' },
 ]);
-let _adminRequests = loadOrSeed('sahaya_admin_requests', []);
 
-const _listeners = { incidents: [], messages: {}, volunteers: [], adminRequests: [] };
+const _listeners = { incidents: [], messages: {}, volunteers: [] };
 
 function loadOrSeed(key, seed) {
   try {
@@ -258,64 +257,6 @@ export const volunteerStore = {
     _listeners.volunteers.push(fn);
     fn([..._volunteers]);
     return () => { _listeners.volunteers = _listeners.volunteers.filter(f => f !== fn); };
-  },
-};
-
-// ── Admin Access Requests API ──────────────────────────────
-// Request system for users to request admin access
-// Only existing admins can approve/deny requests
-export const adminRequestStore = {
-  getAll: () => [..._adminRequests].sort((a, b) => b.createdAt - a.createdAt),
-
-  getPending: () => _adminRequests.filter(r => r.status === 'pending'),
-
-  request(userId, userName, userEmail, reason = '') {
-    // Check if user already has a pending request
-    const existing = _adminRequests.find(r => r.userId === userId && r.status === 'pending');
-    if (existing) return null;
-
-    const newReq = {
-      id: 'adminreq-' + Date.now(),
-      userId,
-      userName,
-      userEmail,
-      reason: reason.trim(),
-      status: 'pending',
-      createdAt: Date.now(),
-      decidedAt: null,
-      decidedBy: null,
-      decidedByName: null,
-    };
-    _adminRequests = [newReq, ..._adminRequests];
-    persist('sahaya_admin_requests', _adminRequests);
-    notify('adminRequests', _adminRequests);
-    return newReq;
-  },
-
-  approve(requestId, adminId, adminName) {
-    _adminRequests = _adminRequests.map(r =>
-      r.id === requestId
-        ? { ...r, status: 'approved', decidedAt: Date.now(), decidedBy: adminId, decidedByName: adminName }
-        : r
-    );
-    persist('sahaya_admin_requests', _adminRequests);
-    notify('adminRequests', _adminRequests);
-  },
-
-  deny(requestId, adminId, adminName) {
-    _adminRequests = _adminRequests.map(r =>
-      r.id === requestId
-        ? { ...r, status: 'denied', decidedAt: Date.now(), decidedBy: adminId, decidedByName: adminName }
-        : r
-    );
-    persist('sahaya_admin_requests', _adminRequests);
-    notify('adminRequests', _adminRequests);
-  },
-
-  subscribe(fn) {
-    _listeners.adminRequests.push(fn);
-    fn([..._adminRequests]);
-    return () => { _listeners.adminRequests = _listeners.adminRequests.filter(f => f !== fn); };
   },
 };
 
