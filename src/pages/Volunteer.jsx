@@ -4,11 +4,11 @@
 // Floating Bottom Nav: Map | Chats | Profile
 // ──────────────────────────────────────────────────────────
 import { useState, useEffect, useRef } from 'react';
-import { logout, getAllUsers } from '../auth.js';
+import { getAllUsers } from '../auth.js';
 import { incidentStore, chatStore, haversine } from '../store.js';
 import IncidentMap from '../components/IncidentMap.jsx';
 import {
-  Avatar, PriorityBadge, StatusBadge, CategoryIcon,
+  AppHeader, Avatar, PriorityBadge, StatusBadge, CategoryIcon,
   StatCard, InlineChat, Spinner, toast,
 } from '../components/ui.jsx';
 
@@ -73,27 +73,7 @@ export default function Volunteer({ user, onLogout }) {
 
   return (
     <div className="min-h-screen bg-[var(--bg-deep)] text-[var(--text-primary)] pb-28">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-white/7 bg-[var(--bg-surface)]/80 backdrop-blur-xl px-5 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
-            style={{ background: 'linear-gradient(135deg,#fb923c,#ea580c)', boxShadow: '0 4px 10px #fb923c33' }}>
-            🤝
-          </div>
-          <div>
-            <span className="font-display font-bold text-sm">Sahaya</span>
-            <span className="text-xs font-body ml-2" style={{ color: '#60a5fa' }}>Volunteer</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Avatar initials={user.avatar || user.name[0]} color={user.color || '#60a5fa'} size={30} />
-          <button onClick={() => { logout(); onLogout(); }}
-            className="text-xs font-body py-1.5 px-3 rounded-lg transition-all hover:bg-red-500/10 hover:text-red-400"
-            style={{ color: 'var(--text-muted)' }}>
-            Sign Out
-          </button>
-        </div>
-      </header>
+      <AppHeader user={user} onLogout={onLogout} roleLabel="Volunteer" roleColor="#60a5fa" />
 
       <div className="max-w-2xl mx-auto px-4 pt-6">
 

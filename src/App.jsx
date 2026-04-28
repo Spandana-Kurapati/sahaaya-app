@@ -10,6 +10,7 @@ import Admin from './pages/Admin.jsx';
 import Volunteer from './pages/Volunteer.jsx';
 import User from './pages/User.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import { BRAND } from './constants.js';
 
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = loading
@@ -40,7 +41,7 @@ export default function App() {
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5 animate-pulse"
             style={{
-              background: 'linear-gradient(135deg, #fb923c, #ea580c)',
+              background: BRAND.gradient,
               boxShadow: '0 8px 32px rgba(251,146,60,0.4)',
             }}
           >

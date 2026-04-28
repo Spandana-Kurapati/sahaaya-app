@@ -4,11 +4,10 @@
 // Incident Reporter + AI Analysis + Status Tracker
 // ──────────────────────────────────────────────────────────
 import { useState, useEffect, useRef } from 'react';
-import { logout } from '../auth.js';
 import { incidentStore } from '../store.js';
 import { analyzeIncident } from '../gemini.js';
 import {
-  Avatar, PriorityBadge, StatusBadge, CategoryIcon,
+  AppHeader, Avatar, PriorityBadge, StatusBadge, CategoryIcon,
   StatCard, Spinner, toast,
 } from '../components/ui.jsx';
 
@@ -148,47 +147,28 @@ export default function User({ user, onLogout }) {
   return (
     <div className="min-h-screen bg-[var(--bg-deep)] text-[var(--text-primary)]">
 
-      {/* ── Top bar ───────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 border-b border-white/7 bg-[var(--bg-surface)]/80 backdrop-blur-xl px-5 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
-            style={{ background: 'linear-gradient(135deg,#fb923c,#ea580c)', boxShadow: '0 4px 10px #fb923c33' }}>
-            🤝
-          </div>
-          <div>
-            <span className="font-display font-bold text-sm">Sahaya</span>
-            <span className="text-xs font-body ml-2" style={{ color: '#f472b6' }}>Citizen</span>
-          </div>
+      <AppHeader user={user} onLogout={onLogout} roleLabel="Citizen" roleColor="#f472b6">
+        {/* Tab switcher */}
+        <div className="glass rounded-xl p-1 flex gap-1">
+          {[
+            { key: 'report', label: '+ Report' },
+            { key: 'track',  label: '📍 Track' },
+          ].map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-body font-medium transition-all ${
+                tab === t.key
+                  ? 'text-zinc-900 font-bold'
+                  : 'hover:bg-white/5'
+              }`}
+              style={tab === t.key ? {
+                background: 'linear-gradient(135deg,#fb923c,#ea580c)',
+                color: '#7c2d12',
+              } : { color: 'var(--text-muted)' }}>
+              {t.label}
+            </button>
+          ))}
         </div>
-        <div className="flex items-center gap-3">
-          {/* Tab switcher */}
-          <div className="glass rounded-xl p-1 flex gap-1">
-            {[
-              { key: 'report', label: '+ Report' },
-              { key: 'track',  label: '📍 Track' },
-            ].map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-body font-medium transition-all ${
-                  tab === t.key
-                    ? 'text-zinc-900 font-bold'
-                    : 'hover:bg-white/5'
-                }`}
-                style={tab === t.key ? {
-                  background: 'linear-gradient(135deg,#fb923c,#ea580c)',
-                  color: '#7c2d12',
-                } : { color: 'var(--text-muted)' }}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <Avatar initials={user.avatar || user.name[0]} color={user.color || '#f472b6'} size={30} />
-          <button onClick={() => { logout(); onLogout(); }}
-            className="text-xs font-body py-1.5 px-3 rounded-lg transition-all hover:bg-red-500/10 hover:text-red-400"
-            style={{ color: 'var(--text-muted)' }}>
-            Sign Out
-          </button>
-        </div>
-      </header>
+      </AppHeader>
 
       <div className="max-w-xl mx-auto px-4 py-8">
 

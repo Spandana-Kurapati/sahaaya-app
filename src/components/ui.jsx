@@ -3,6 +3,40 @@
 // Sahaya — Shared design-system components
 // ──────────────────────────────────────────────────────────
 import { useState } from 'react';
+import { logout } from '../auth.js';
+import { BRAND } from '../constants.js';
+
+// ── AppHeader ──────────────────────────────────────────────
+// Shared top-bar for Volunteer and User pages.
+// Pass `roleLabel` and `roleColor` to customise the badge.
+// Optionally pass `children` for extra controls (e.g. tab switcher).
+export function AppHeader({ user, onLogout, roleLabel, roleColor, children }) {
+  return (
+    <header className="sticky top-0 z-40 border-b border-white/7 bg-[var(--bg-surface)]/80 backdrop-blur-xl px-5 py-3.5 flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-lg"
+          style={{ background: BRAND.gradient, boxShadow: '0 4px 10px #fb923c33' }}>
+          🤝
+        </div>
+        <div>
+          <span className="font-display font-bold text-sm">Sahaya</span>
+          <span className="text-xs font-body ml-2" style={{ color: roleColor }}>{roleLabel}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        {children}
+        <Avatar initials={user.avatar || user.name[0]} color={user.color || roleColor} size={30} />
+        <button
+          onClick={() => { logout(); onLogout(); }}
+          className="text-xs font-body py-1.5 px-3 rounded-lg transition-all hover:bg-red-500/10 hover:text-red-400"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          Sign Out
+        </button>
+      </div>
+    </header>
+  );
+}
 
 // ── Avatar ─────────────────────────────────────────────────
 export function Avatar({ initials, color = '#fb923c', size = 36, className = '' }) {
