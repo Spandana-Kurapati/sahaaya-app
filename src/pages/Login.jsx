@@ -7,7 +7,7 @@ import { login, DEMO_USERS } from '../auth.js';
 import { Spinner } from '../components/ui.jsx';
 
 const ROLE_PRESETS = [
-  { role: 'admin',     label: 'Admin',     icon: '🛡️', email: 'admin@sahaya.org',  password: 'admin123', color: '#fb923c', desc: 'Full platform control' },
+  // Admin role hidden — access only via direct login for hardcoded admins
   { role: 'volunteer', label: 'Volunteer', icon: '🙋', email: 'arjun@sahaya.org',  password: 'vol123',   color: '#60a5fa', desc: 'Respond to incidents' },
   { role: 'user',      label: 'Citizen',   icon: '👤', email: 'sneha@sahaya.org',  password: 'user123',  color: '#f472b6', desc: 'Report emergencies' },
 ];
