@@ -241,14 +241,8 @@ export const volunteerStore = {
     notify('volunteers', _volunteers);
   },
 
-  report(id) {
-    _volunteers = _volunteers.map(v => v.id === id ? { ...v, reported: true } : v);
-    persist('sahaya_volunteers', _volunteers);
-    notify('volunteers', _volunteers);
-  },
-
-  unreport(id) {
-    _volunteers = _volunteers.map(v => v.id === id ? { ...v, reported: false } : v);
+  toggleReport(id) {
+    _volunteers = _volunteers.map(v => v.id === id ? { ...v, reported: !v.reported } : v);
     persist('sahaya_volunteers', _volunteers);
     notify('volunteers', _volunteers);
   },

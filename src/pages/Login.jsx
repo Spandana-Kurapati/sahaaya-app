@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { login, DEMO_USERS } from '../auth.js';
 import { Spinner } from '../components/ui.jsx';
+import { BRAND } from '../constants.js';
 
 const ROLE_PRESETS = [
   { role: 'admin',     label: 'Admin',     icon: '🛡️', email: 'admin@sahaya.org',  password: 'admin123', color: '#fb923c', desc: 'Full platform control' },
@@ -31,7 +32,7 @@ export default function Login({ onLogin }) {
     setLoading(true);
     setError('');
     await new Promise(r => setTimeout(r, 600)); // UX delay
-    const session = login(email, password);
+    const session = await login(email, password);
     if (!session) {
       setError('Invalid email or password. Use the demo cards below.');
       setLoading(false);
@@ -63,7 +64,7 @@ export default function Login({ onLogin }) {
         {/* Logo */}
         <div className="text-center mb-10 stagger-1">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 relative"
-            style={{ background: 'linear-gradient(135deg, #fb923c, #ea580c)', boxShadow: '0 8px 32px #fb923c44' }}>
+            style={{ background: BRAND.gradient, boxShadow: '0 8px 32px #fb923c44' }}>
             <span className="text-3xl">🤝</span>
           </div>
           <h1 className="text-4xl font-display font-extrabold tracking-tight text-white mb-2">
@@ -135,8 +136,8 @@ export default function Login({ onLogin }) {
             <button type="submit" disabled={loading}
               className="w-full rounded-xl py-3 font-display font-bold text-sm text-zinc-900 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
               style={{
-                background: 'linear-gradient(135deg, #fb923c, #ea580c)',
-                boxShadow: '0 4px 20px rgba(251,146,60,0.35)',
+                background: BRAND.gradient,
+                boxShadow: BRAND.shadow,
                 opacity: loading ? 0.7 : 1,
               }}>
               {loading ? <><Spinner size={16} color="#7c2d12" /> Signing in...</> : 'Sign In →'}

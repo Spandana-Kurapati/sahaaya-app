@@ -11,6 +11,7 @@ import {
   Avatar, PriorityBadge, StatusBadge, CategoryIcon,
   StatCard, InlineChat, ConfirmDialog, toast,
 } from '../components/ui.jsx';
+import { BRAND } from '../constants.js';
 
 const NAV = [
   { key: 'management', label: 'Management',    icon: '⚙️' },
@@ -46,13 +47,8 @@ export default function Admin({ user, onLogout }) {
   }
 
   function handleReport(v) {
-    if (v.reported) {
-      volunteerStore.unreport(v.id);
-      toast(`Flag removed from ${v.name}`, 'info');
-    } else {
-      volunteerStore.report(v.id);
-      toast(`${v.name} flagged for review`, 'warning');
-    }
+    volunteerStore.toggleReport(v.id);
+    toast(v.reported ? `Flag removed from ${v.name}` : `${v.name} flagged for review`, v.reported ? 'info' : 'warning');
   }
 
   function handleAddVolunteer() {
@@ -86,12 +82,12 @@ export default function Admin({ user, onLogout }) {
         <div className="p-5 border-b border-white/5">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl"
-              style={{ background: 'linear-gradient(135deg,#fb923c,#ea580c)', boxShadow: '0 4px 12px #fb923c33' }}>
+              style={{ background: BRAND.gradient, boxShadow: '0 4px 12px #fb923c33' }}>
               🤝
             </div>
             <div>
               <p className="font-display font-bold text-base leading-none">Sahaya</p>
-              <p className="text-xs font-body mt-0.5" style={{ color: '#fb923c' }}>Admin</p>
+              <p className="text-xs font-body mt-0.5" style={{ color: BRAND.orange }}>Admin</p>
             </div>
           </div>
         </div>
@@ -148,7 +144,7 @@ export default function Admin({ user, onLogout }) {
                 <button
                   onClick={() => setShowAddVol(!showAddVol)}
                   className="text-sm font-body font-semibold px-4 py-2 rounded-xl transition-all hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg,#fb923c,#ea580c)', color: '#fff', boxShadow: '0 4px 12px #fb923c44' }}
+                  style={{ background: BRAND.gradient, color: '#fff', boxShadow: BRAND.shadowSm }}
                 >
                   + Add Volunteer
                 </button>
@@ -188,7 +184,7 @@ export default function Admin({ user, onLogout }) {
                     onClick={handleAddVolunteer}
                     disabled={!newVolName.trim()}
                     className="px-5 py-2.5 rounded-xl text-sm font-body font-semibold transition-all hover:scale-105 disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg,#fb923c,#ea580c)', color: '#fff' }}
+                    style={{ background: BRAND.gradient, color: '#fff' }}
                   >
                     Add Volunteer
                   </button>
